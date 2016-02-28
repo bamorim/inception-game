@@ -1,11 +1,10 @@
 {
-  "name": "questions-frontend",
+  "name": "inception-game",
   "version": "0.0.0",
   "description": "",
   "scripts": {
     "start": "webpack-dev-server --content-base public/",
     "build": "webpack",
-    "deploy": "webpack; firebase deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Bernardo Amorim",
