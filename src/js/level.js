@@ -96,16 +96,22 @@ class Level {
     // Add the Computer
     this.computerTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}); 
 
-    let aspectRatio = window.innerWidth/window.innerHeight
     var computerMaterial = new THREE.MeshBasicMaterial({map: this.computerTexture});
-    var computerGeometry = new THREE.BoxGeometry(15,15/aspectRatio,15);
-    var computer = new THREE.Mesh(computerGeometry,computerMaterial); 
+    var computerGeometry = new THREE.BoxGeometry(15,15,15);
+    this.computer = new THREE.Mesh(computerGeometry,computerMaterial); 
 
-    computer.position.z = -9*wallLength;
-    computer.position.x = -9*wallLength;
-    computer.position.y = 10;
-    window.computer = computer;
-    this.scene.add(computer)
+    let aspectRatio = window.innerWidth/window.innerHeight;
+    this.computer.scale.set(1,1/aspectRatio,1);
+
+    this.computer.position.z = -9*wallLength;
+    this.computer.position.x = -9*wallLength;
+    this.computer.position.y = 10;
+    this.scene.add(this.computer)
+  }
+
+  isNearBox(){
+    let dist = this.computer.position.distanceTo(this.camera.getWorldPosition());
+    return dist < 15;
   }
 
   setupControls(){

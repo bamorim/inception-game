@@ -9,12 +9,16 @@ class Game {
     this.setupDOM(elm);
     this.setupPointerLock(elm);
     this.pause();
+    this.setupNestingEvents();
+  }
 
-    // This should be events going from levels
+  setupNestingEvents(){
+    window.levels = this.levels;
     document.addEventListener( 'keypress', ({keyCode})=>{
       // Press e to go down and q to go up
       if(keyCode == 101){
-        this.goDown();
+        if(this.levels[this.current_level].isNearBox())
+          this.goDown();
       } else if(keyCode == 113){
         this.goUp();
       }
@@ -55,16 +59,6 @@ class Game {
     });
   }
 
-  pause(){
-    this.paused = true;
-    this.levels.forEach((level) => level.disableControls());
-  }
-
-  unpause(){
-    this.paused = false;
-    this.levels[this.current_level].enableControls();
-  }
-
   setupRenderer(){
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setClearColor( 0xffffff );
@@ -79,12 +73,6 @@ class Game {
     this.appendNewLevel();
   }
 
-  appendNewLevel(){
-    var newLevel = new Level();
-    newLevel.disableControls();
-    this.levels.push(newLevel);
-  }
-
   setupDOM(elm){
     this.blocker = document.createElement('div');
     this.blocker.id = 'blocker';
@@ -94,14 +82,44 @@ class Game {
     this.instructions.innerHTML = `
       <span style="font-size:40px">Click to play</span>
       <br />
-      (W, A, S, D = Move, SPACE = Jump, MOUSE = Look around)
+      W, A, S, D = Move, MOUSE = Look around
+      <br />
+      E = Go To Next Level, Q = Go Back One Level
+      <br /> 
+      You have to be close to the screen so you can go to next level.
     `;
 
     this.blocker.appendChild(this.instructions);
 
-    elm.appendChild( this.blocker );
-    elm.appendChild( this.renderer.domElement );
+    this.hud = document.createElement('div');
+    var hudmsg = document.createElement('span');
+    hudmsg.innerText = 'Current Level: ';
+    this.hudlevel = document.createElement('span');
+    this.hudlevel.innerText = '0';
+    this.hud.appendChild(hudmsg);
+    this.hud.appendChild(this.hudlevel);
+    this.hud.id='hud';
 
+    elm.appendChild( this.blocker );
+    elm.appendChild( this.hud );
+    elm.appendChild( this.renderer.domElement );
+  }
+
+  appendNewLevel(){
+    var newLevel = new Level();
+    newLevel.disableControls();
+    this.levels.push(newLevel);
+  }
+
+  pause(){
+    this.paused = true;
+    this.levels.forEach((level) => level.disableControls());
+  }
+
+  unpause(){
+    this.paused = false;
+    this.levels[this.current_level].enableControls();
+    this.hudlevel.innerText = this.current_level;
   }
 
   goDown(){
@@ -111,11 +129,13 @@ class Game {
       this.appendNewLevel();
     }
     this.current_level++;
+    this.hudlevel.innerText = this.current_level;
     this.pause();
     this.unpause();
   }
 
   goUp(){
+    if(this.current_level == 0) return;
     this.current_level--;
     this.pause();
     this.unpause();
@@ -151,6 +171,8 @@ class Game {
 
   onWindowResize(){
     this.levels.forEach((level) => {
+      let aspectRatio = window.innerWidth/window.innerHeight
+      level.computer.scale.set(1,1/aspectRatio,1);
       level.camera.aspect = window.innerWidth / window.innerHeight;
       level.camera.updateProjectionMatrix();
     })
