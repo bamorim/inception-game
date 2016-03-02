@@ -68,7 +68,8 @@ class Level {
 
     var addWall = (wall) => {
       this.scene.add(wall);
-      this.walls.push(wall);
+      var wbox = wallBox(wall);
+      this.walls.push(wbox);
     }
 
     // Add the surroundings
@@ -212,23 +213,33 @@ class Level {
       camobject.translateZ( this.velocity.z*delta );
 
       var p2 = xzpos(camobject);
-      var ray = new THREE.Ray(camobject.position, new THREE.Vector3(0,-1,0));
 
-      let D = 3;
-
-      var {x,z} = camobject.position;
-      var intersects = this.walls.filter(function(w){
-        var wbox = wallBox(w);
-        return wbox.min.x-D <= x && wbox.min.z-D <= z && wbox.max.x+D >= x && wbox.max.z+D >= z; 
-      });
+      var intersects = this.walls.filter(wallContaining(p2.x,p2.z));
 
       if(intersects.length > 0){
-        this.velocity.x = 0;
-        this.velocity.y = 0;
-        camobject.position.x = p1.x;
-        camobject.position.z = p1.z;
+        // Allow 'sliding' on X and Z by removing only one movement axis
+        if(intersects.filter(wallContaining(p2.x,p1.z)).length == 0){
+          this.velocity.x = 0;
+          camobject.position.z = p1.z;
+        } else if(intersects.filter(wallContaining(p1.x,p2.z)).length == 0){
+          this.velocity.z = 0;
+          camobject.position.x = p1.x;
+        } else {
+          this.velocity.x = 0;
+          camobject.position.x = p1.x;
+          this.velocity.z = 0;
+          camobject.position.z = p1.z;
+        }
       }
     }
+  }
+}
+
+function wallContaining(x,z){
+  let D = 3;
+
+  return function(w){
+    return w.min.x-D <= x && w.min.z-D <= z && w.max.x+D >= x && w.max.z+D >= z; 
   }
 }
 
