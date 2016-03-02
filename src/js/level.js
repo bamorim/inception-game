@@ -66,13 +66,18 @@ class Level {
 
     this.scene.add( makeFloorMesh() );
 
+    var addWall = (wall) => {
+      this.scene.add(wall);
+      this.walls.push(wall);
+    }
+
     // Add the surroundings
     for ( var i = 0; i < 10; i++ ){
-      this.scene.add( makeXWall(i,-1) );
-      this.scene.add( makeXWall(i,9) );
+      addWall( makeXWall(i,-1) );
+      addWall( makeXWall(i,9) );
 
-      this.scene.add( makeZWall(0,i-1) );
-      this.scene.add( makeZWall(10,i-1) );
+      addWall( makeZWall(0,i-1) );
+      addWall( makeZWall(10,i-1) );
     }
 
     // Add the inner walls
@@ -80,15 +85,12 @@ class Level {
     for ( var i = 0; i < 10; i++ ){
       for ( var j = 0; j < 9; j++) {
         if(!horiz[i][j]){
-          let wall = makeXWall(i,j);
-          this.walls.push(wall);
-          this.scene.add( wall );
+          
+          addWall(makeXWall(i,j));
         }
 
         if(!verti[j][i]){
-          let wall = makeZWall(j+1,i-1);
-          this.walls.push(wall);
-          this.scene.add( wall );
+          addWall(makeZWall(j+1,i-1));
         }
       }
     }
@@ -202,11 +204,6 @@ class Level {
       if ( this.controls.moveLeft ) this.velocity.x -= 400.0 * delta;
       if ( this.controls.moveRight ) this.velocity.x += 400.0 * delta;
 
-      function xzpos(obj){
-        var pos = obj.position;
-        return {x: pos.x, z: pos.z};
-      }
-
       var camobject = this.controls.getObject();
 
       var p1 = xzpos(camobject);
@@ -215,76 +212,34 @@ class Level {
       camobject.translateZ( this.velocity.z*delta );
 
       var p2 = xzpos(camobject);
+      var ray = new THREE.Ray(camobject.position, new THREE.Vector3(0,-1,0));
 
-      var segment = { p1, p2 };
+      let D = 3;
 
-      function segmentColliding(s1, s2){
-				return lineIntersect(s1.p1.x,s1.p1.z, s1.p2.x,s1.p2.z, s2.p1.x,s2.p1.z, s2.p2.x,s2.p2.z);
-      }
-
-      this.walls.forEach((wall) => {
-        getWallSegments(wall).map((w_seg) => {
-          if(segmentColliding(w_seg,segment)){
-            if(w_seg.p1.z == w_seg.p2.z){
-              camobject.position.z = segment.p1.z;
-            } else {
-              camobject.position.x = segment.p1.x;
-            }
-          }
-        });
+      var {x,z} = camobject.position;
+      var intersects = this.walls.filter(function(w){
+        var wbox = wallBox(w);
+        return wbox.min.x-D <= x && wbox.min.z-D <= z && wbox.max.x+D >= x && wbox.max.z+D >= z; 
       });
+
+      if(intersects.length > 0){
+        this.velocity.x = 0;
+        this.velocity.y = 0;
+        camobject.position.x = p1.x;
+        camobject.position.z = p1.z;
+      }
     }
   }
 }
 
-
-function lineIntersect(x1,y1,x2,y2, x3,y3,x4,y4) {
-    var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
-    var y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
-    if (isNaN(x)||isNaN(y)) {
-        return false;
-    } else {
-        if (x1>x2) {
-            if (!(x2<=x&&x<=x1)) {return false;}
-        } else {
-            if (!(x1<=x&&x<=x2)) {return false;}
-        }
-        if (y1>y2) {
-            if (!(y2<=y&&y<=y1)) {return false;}
-        } else {
-            if (!(y1<=y&&y<=y2)) {return false;}
-        }
-        if (x3>x4) {
-            if (!(x4<=x&&x<=x3)) {return false;}
-        } else {
-            if (!(x3<=x&&x<=x4)) {return false;}
-        }
-        if (y3>y4) {
-            if (!(y4<=y&&y<=y3)) {return false;}
-        } else {
-            if (!(y3<=y&&y<=y4)) {return false;}
-        }
-    }
-    return true;
+function wallBox(w){
+  w.geometry.computeBoundingBox();
+  return w.geometry.boundingBox.clone().translate(w.getWorldPosition());
 }
 
-window.lineIntersect = lineIntersect;
-
-function getWallSegments(wall){
-  let { x, z } = wall.position;
-  let { width, depth } = wall.geometry.parameters;
-
-  let p1 = { x: x+width/2+2, z: z+depth/2+2 };
-  let p2 = { x: x-width/2-2, z: z+depth/2+2 };
-  let p3 = { x: x+width/2+2, z: z-depth/2-2 };
-  let p4 = { x: x-width/2-2, z: z-depth/2-2 };
-
-  return [
-    {p1: p1, p2: p2},
-    {p1: p1, p2: p3},
-    {p1: p2, p2: p4},
-    {p1: p3, p2: p4}
-  ];
+function xzpos(obj){
+  var pos = obj.position;
+  return {x: pos.x, z: pos.z};
 }
 
 export default Level;
