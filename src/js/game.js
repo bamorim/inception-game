@@ -2,7 +2,8 @@ import THREE from 'three';
 import Level from './level';
 
 class Game {
-  constructor(elm){
+  constructor(elm,palette){
+    this.palette = palette;
 		this.prevTime = performance.now();
     this.setupRenderer();
     this.setupLevels();
@@ -67,7 +68,7 @@ class Game {
   }
 
   setupLevels(){
-    this.levels = [new Level()];
+    this.levels = [new Level(this.palette[0])];
     this.levels[0].enableControls();
     this.current_level = 0;
     this.appendNewLevel();
@@ -106,7 +107,8 @@ class Game {
   }
 
   appendNewLevel(){
-    var newLevel = new Level();
+    var color = this.palette[this.levels.length % this.palette.length];
+    var newLevel = new Level(color);
     newLevel.disableControls();
     this.levels.push(newLevel);
   }

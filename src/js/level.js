@@ -14,28 +14,10 @@ let wallLength = 22;
 let wallHeight = 20;
 let wallWidth = 2;
 
-function makeWall(x,z,dx,dz){
-	var geometry = new THREE.BoxGeometry( dx, wallHeight, dz );
-	var material = new THREE.MeshPhongMaterial( { color: 0xff6666, specular: 0x009900, shininess: 30, shading: THREE.SmoothShading, transparent: true } );
-	var mesh = new THREE.Mesh( geometry, material );
-
-	mesh.position.x = -1 * x;
-	mesh.position.y = 10;
-	mesh.position.z = -1 * z;
-
-	return mesh;
-}
-
-function makeXWall(x,z){
-	return makeWall(x*wallLength, z*wallLength+wallLength/2, wallLength, wallWidth);
-}
-
-function makeZWall(x,z){
-	return makeWall(x*wallLength-wallLength/2, z*wallLength+wallLength, wallWidth, wallLength);
-}
 
 class Level {
-  constructor(){
+  constructor(color){
+    this.color = color || 0xff6666;
     this.setupCamera();
     this.setupScene();
     this.setupControls();
@@ -66,19 +48,13 @@ class Level {
 
     this.scene.add( makeFloorMesh() );
 
-    var addWall = (wall) => {
-      this.scene.add(wall);
-      var wbox = wallBox(wall);
-      this.walls.push(wbox);
-    }
-
     // Add the surroundings
     for ( var i = 0; i < 10; i++ ){
-      addWall( makeXWall(i,-1) );
-      addWall( makeXWall(i,9) );
+      this.addXWall(i,-1);
+      this.addXWall(i,9);
 
-      addWall( makeZWall(0,i-1) );
-      addWall( makeZWall(10,i-1) );
+      this.addZWall(0,i-1);
+      this.addZWall(10,i-1);
     }
 
     // Add the inner walls
@@ -86,12 +62,11 @@ class Level {
     for ( var i = 0; i < 10; i++ ){
       for ( var j = 0; j < 9; j++) {
         if(!horiz[i][j]){
-          
-          addWall(makeXWall(i,j));
+          this.addXWall(i,j);
         }
 
         if(!verti[j][i]){
-          addWall(makeZWall(j+1,i-1));
+          this.addZWall(j+1,i-1);
         }
       }
     }
@@ -192,49 +167,73 @@ class Level {
   }
 
   update(delta){
-    if ( this.controls.enabled ) {
-      this.raycaster.ray.origin.copy( this.controls.getObject().position );
+    if (!this.controls.enabled) return;
+
+    this.raycaster.ray.origin.copy( this.controls.getObject().position );
 
 
-      this.velocity.x -= this.velocity.x * 10.0 * delta;
-      this.velocity.z -= this.velocity.z * 10.0 * delta;
+    this.velocity.x -= this.velocity.x * 10.0 * delta;
+    this.velocity.z -= this.velocity.z * 10.0 * delta;
 
-      if ( this.controls.moveForward ) this.velocity.z -= 400.0 * delta;
-      if ( this.controls.moveBackward ) this.velocity.z += 400.0 * delta;
+    if ( this.controls.moveForward ) this.velocity.z -= 400.0 * delta;
+    if ( this.controls.moveBackward ) this.velocity.z += 400.0 * delta;
 
-      if ( this.controls.moveLeft ) this.velocity.x -= 400.0 * delta;
-      if ( this.controls.moveRight ) this.velocity.x += 400.0 * delta;
+    if ( this.controls.moveLeft ) this.velocity.x -= 400.0 * delta;
+    if ( this.controls.moveRight ) this.velocity.x += 400.0 * delta;
 
-      var camobject = this.controls.getObject();
+    var camobject = this.controls.getObject();
 
-      var p1 = xzpos(camobject);
+    var p1 = xzpos(camobject);
 
-      camobject.translateX( this.velocity.x*delta );
-      camobject.translateZ( this.velocity.z*delta );
+    camobject.translateX( this.velocity.x*delta );
+    camobject.translateZ( this.velocity.z*delta );
 
-      var p2 = xzpos(camobject);
+    var p2 = xzpos(camobject);
 
-      var intersects = this.walls.filter(wallContaining(p2.x,p2.z));
+    var intersects = this.walls.filter(wallContaining(p2.x,p2.z));
+    if(intersects.length == 0) return; // No colisions
 
-      if(intersects.length > 0){
-        // Allow 'sliding' on X and Z by removing only one movement axis
-        if(intersects.filter(wallContaining(p2.x,p1.z)).length == 0){
-          this.velocity.x = 0;
-          camobject.position.z = p1.z;
-        } else if(intersects.filter(wallContaining(p1.x,p2.z)).length == 0){
-          this.velocity.z = 0;
-          camobject.position.x = p1.x;
-        } else {
-          this.velocity.x = 0;
-          camobject.position.x = p1.x;
-          this.velocity.z = 0;
-          camobject.position.z = p1.z;
-        }
-      }
+    // Allow 'sliding' on X and Z by removing only one movement axis
+    if(intersects.filter(wallContaining(p2.x,p1.z)).length == 0){
+      this.velocity.x = 0;
+      camobject.position.z = p1.z;
+    } else if(intersects.filter(wallContaining(p1.x,p2.z)).length == 0){
+      this.velocity.z = 0;
+      camobject.position.x = p1.x;
+    } else {
+      this.velocity.x = 0;
+      camobject.position.x = p1.x;
+      this.velocity.z = 0;
+      camobject.position.z = p1.z;
     }
+  }
+
+  addWall(x,z,dx,dz){
+    var geometry = new THREE.BoxGeometry( dx, wallHeight, dz );
+    var material = new THREE.MeshPhongMaterial( { color: this.color, specular: 0x009900, shininess: 30, shading: THREE.SmoothShading, transparent: true } );
+    var mesh = new THREE.Mesh( geometry, material );
+
+    mesh.position.x = -1 * x;
+    mesh.position.y = 10;
+    mesh.position.z = -1 * z;
+
+    this.scene.add(mesh);
+    var wbox = wallBox(mesh);
+    this.walls.push(wbox);
+
+    return mesh;
+  }
+
+  addXWall(x,z){
+    return this.addWall(x*wallLength, z*wallLength+wallLength/2, wallLength, wallWidth);
+  }
+
+  addZWall(x,z){
+    return this.addWall(x*wallLength-wallLength/2, z*wallLength+wallLength, wallWidth, wallLength);
   }
 }
 
+// Helper functions used in "collision" detection
 function wallContaining(x,z){
   let D = 3;
 
