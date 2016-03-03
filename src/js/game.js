@@ -139,7 +139,9 @@ class Game {
       this.appendNewLevel();
     }
 
+    // Update the level on the HUD
     this.hudlevel.innerText = this.current_level;
+
     this.levels[this.current_level-1].disableControls();
     this.levels[this.current_level].enableControls();
   }
@@ -148,6 +150,9 @@ class Game {
     if(this.current_level == 0) return;
 
     this.current_level--;
+
+    // Update the level on the HUD
+    this.hudlevel.innerText = this.current_level;
 
     this.levels[this.current_level+1].disableControls();
     this.levels[this.current_level].enableControls();
