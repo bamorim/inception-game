@@ -1,6 +1,7 @@
 require("../css/main.css");
 import Game from './game';
 
+// Pallete of colors that colorblind people can see, to be used to color the walls
 var colorBlindPalette = [
   0xE79F29,
   0x5CB4E4,

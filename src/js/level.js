@@ -87,7 +87,7 @@ class Level {
     this.computer.position.y = 10;
     this.scene.add(this.computer)
   }
-
+  // Check if person is able to go to the next level by proximity with the virtual screen
   isNearBox(){
     let dist = this.computer.position.distanceTo(this.camera.getWorldPosition());
     return dist < 15;
@@ -168,9 +168,11 @@ class Level {
   update(delta){
     if (!this.controls.enabled) return;
 
+    // Reduce velocity gradually when not pressing anything
     this.velocity.x -= this.velocity.x * 10.0 * delta;
     this.velocity.z -= this.velocity.z * 10.0 * delta;
 
+    // Movement velocity
     if ( this.controls.moveForward ) this.velocity.z -= 400.0 * delta;
     if ( this.controls.moveBackward ) this.velocity.z += 400.0 * delta;
 
@@ -178,7 +180,7 @@ class Level {
     if ( this.controls.moveRight ) this.velocity.x += 400.0 * delta;
 
     var camobject = this.controls.getObject();
-
+    // Collision detection
     var p1 = xzpos(camobject);
 
     camobject.translateX( this.velocity.x*delta );
@@ -186,6 +188,7 @@ class Level {
 
     var p2 = xzpos(camobject);
 
+    // Check if translated object collided
     var intersects = this.walls.filter(wallContaining(p2.x,p2.z));
     if(intersects.length == 0) return; // No colisions
 
@@ -219,11 +222,11 @@ class Level {
 
     return mesh;
   }
-
+  // Add wall parallel to X axis
   addXWall(x,z){
     return this.addWall(x*wallLength, z*wallLength+wallLength/2, wallLength, wallWidth);
   }
-
+  // Add wall parallel to Z axis
   addZWall(x,z){
     return this.addWall(x*wallLength-wallLength/2, z*wallLength+wallLength, wallWidth, wallLength);
   }

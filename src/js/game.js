@@ -25,7 +25,7 @@ class Game {
       }
     });
   }
-
+  //Setup pause and unpause events
   setupPointerLock(element){
     let pointerLockChange = ( event ) => {
       if ( document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element ) {
@@ -76,13 +76,14 @@ class Game {
     // And add the next level
     this.appendNewLevel();
   }
-
+	
   setupDOM(elm){
     this.blocker = document.createElement('div');
     this.blocker.id = 'blocker';
 
     this.instructions = document.createElement('div');
     this.instructions.id = 'instructions';
+    // Add instructions on screen
     this.instructions.innerHTML = `
       <span style="font-size:40px">Click to play</span>
       <br />
@@ -90,11 +91,12 @@ class Game {
       <br />
       E = Go To Next Level, Q = Go Back One Level
       <br /> 
-      You have to be close to the screen so you can go to next level.
+      You have to find the virtual screen so you can go to the next level.
     `;
 
     this.blocker.appendChild(this.instructions);
 
+    // Level indicator
     this.hud = document.createElement('div');
     var hudmsg = document.createElement('span');
     hudmsg.innerText = 'Current Level: ';
@@ -112,6 +114,7 @@ class Game {
   appendNewLevel(){
     var levelId = this.levels.length;
     var color = this.palette[levelId % this.palette.length];
+    // create bigger mazes on higher levels
     var size = 10 + 2*levelId;
     var newLevel = new Level(color, size);
 
@@ -129,7 +132,7 @@ class Game {
     this.levels[this.current_level].enableControls();
     this.hudlevel.innerText = this.current_level;
   }
-
+  // Go to next level
   goDown(){
     let lastLevel = this.levels.length-1;
     this.current_level++;
@@ -145,7 +148,7 @@ class Game {
     this.levels[this.current_level-1].disableControls();
     this.levels[this.current_level].enableControls();
   }
-
+  // Go back to previous level
   goUp(){
     if(this.current_level == 0) return;
 
@@ -185,7 +188,7 @@ class Game {
 
     this.render();
   }
-
+ // Setup resizing
   onWindowResize(){
     this.levels.forEach((level) => {
       let aspectRatio = window.innerWidth/window.innerHeight
