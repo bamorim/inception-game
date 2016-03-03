@@ -112,7 +112,7 @@ class Game {
   appendNewLevel(){
     var levelId = this.levels.length;
     var color = this.palette[levelId % this.palette.length];
-    var size = 10 + 4*levelId;
+    var size = 10 + 5*levelId;
     var newLevel = new Level(color, size);
 
     newLevel.disableControls();
