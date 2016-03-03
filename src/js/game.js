@@ -68,7 +68,7 @@ class Game {
   }
 
   setupLevels(){
-    this.levels = [new Level(this.palette[0])];
+    this.levels = [new Level(this.palette[0], 10)];
     this.levels[0].enableControls();
     this.current_level = 0;
     this.appendNewLevel();
@@ -108,7 +108,7 @@ class Game {
 
   appendNewLevel(){
     var color = this.palette[this.levels.length % this.palette.length];
-    var newLevel = new Level(color);
+    var newLevel = new Level(color, 10 + 5*(this.current_level + 1));
     newLevel.disableControls();
     this.levels.push(newLevel);
   }
@@ -126,11 +126,12 @@ class Game {
 
   goDown(){
     let lastLevel = this.levels.length-1;
+    this.current_level++;
+
     // If there is less than two levels below, add one more level
     if(this.current_level >= lastLevel-1){
       this.appendNewLevel();
     }
-    this.current_level++;
     this.hudlevel.innerText = this.current_level;
     this.pause();
     this.unpause();

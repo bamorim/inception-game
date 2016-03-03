@@ -16,8 +16,9 @@ let wallWidth = 2;
 
 
 class Level {
-  constructor(color){
+  constructor(color, size){
     this.color = color || 0xff6666;
+    this.size = size;
     this.setupCamera();
     this.setupScene();
     this.setupControls();
@@ -49,18 +50,18 @@ class Level {
     this.scene.add( makeFloorMesh() );
 
     // Add the surroundings
-    for ( var i = 0; i < 10; i++ ){
+    for ( var i = 0; i < this.size; i++ ){
       this.addXWall(i,-1);
-      this.addXWall(i,9);
+      this.addXWall(i,this.size - 1);
 
       this.addZWall(0,i-1);
-      this.addZWall(10,i-1);
+      this.addZWall(this.size ,i-1);
     }
 
     // Add the inner walls
-    let {horiz, verti} = maze(10,10);
-    for ( var i = 0; i < 10; i++ ){
-      for ( var j = 0; j < 9; j++) {
+    let {horiz, verti} = maze(this.size, this.size);
+    for ( var i = 0; i < this.size; i++ ){
+      for ( var j = 0; j < this.size-1; j++) {
         if(!horiz[i][j]){
           this.addXWall(i,j);
         }
