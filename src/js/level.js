@@ -155,8 +155,6 @@ class Level {
 
     document.addEventListener( 'keydown', onKeyDown, false );
     document.addEventListener( 'keyup', onKeyUp, false );
-
-    this.raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
   }
 
   enableControls(){
@@ -169,9 +167,6 @@ class Level {
 
   update(delta){
     if (!this.controls.enabled) return;
-
-    this.raycaster.ray.origin.copy( this.controls.getObject().position );
-
 
     this.velocity.x -= this.velocity.x * 10.0 * delta;
     this.velocity.z -= this.velocity.z * 10.0 * delta;
